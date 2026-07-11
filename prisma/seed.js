@@ -4,28 +4,63 @@ import dadosCopa from "../src/mock/dadosCopa.js";
 const prisma = new PrismaClient();
 
 async function limparBanco() {
-  // TODO: deletar todos os registros de Partida e depois de Selecao
-  // Dica: qual tabela tem chave estrangeira? Ela precisa ser deletada primeiro.
+  await prisma.partida.deleteMany();
+
+  await prisma.selecao.deleteMany();
 }
 
 async function inserirSelecoes(grupo) {
-  // TODO: percorrer grupo.selecoes e criar cada seleção no banco
-  // Campos necessários: nome, sigla, grupo (letra), bandeira
+  for (const selecao of grupo.selecoes) {
+    await prisma.selecao.create({
+      data: {
+        nome: selecao.nome,
+        sigla: selecao.sigla,
+        grupo: grupo.letra,
+        bandeira: selecao.bandeira,
+      },
+    });
+  }
 }
 
 async function inserirPartidas(grupo) {
-  // TODO: percorrer grupo.partidas e criar cada partida no banco
-  // Atenção: o mock tem siglas (ex: "BRA"), mas o banco precisa de IDs numéricos
-  // Dica: use findUnique para buscar o ID de cada seleção pelo campo sigla
+  for (const partida of grupo.partidas) {
+    const mandante = await prisma.selecao.findUnique({
+      where: {
+        sigla: partida.mandante,
+      },
+    });
+
+    const visitante = await prisma.selecao.findUnique({
+      where: {
+        sigla: partida.visitante,
+      },
+    });
+
+    await prisma.partida.create({
+      data: {
+        mandanteId: mandante.id,
+        visitanteId: visitante.id,
+
+        golsMandante: partida.golsMandante,
+        golsVisitante: partida.golsVisitante,
+
+        rodada: partida.rodada,
+        realizada: partida.realizada,
+      },
+    });
+  }
 }
 
 async function main() {
   console.log("Limpando banco...");
+
   await limparBanco();
 
   console.log("Inserindo dados...");
+
   for (const grupo of dadosCopa.grupos) {
     await inserirSelecoes(grupo);
+
     await inserirPartidas(grupo);
   }
 
@@ -33,9 +68,8 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
-    console.error("Erro no seed:", e);
-    process.exit(1);
+  .catch((erro) => {
+    console.error(erro);
   })
   .finally(async () => {
     await prisma.$disconnect();

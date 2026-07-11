@@ -1,17 +1,7 @@
-import express from "express";
-import cors from "cors";
-import selecoesRouter from "./routes/selecoes.js";
-import partidasRouter from "./routes/partidas.js";
+import app from "./app.js";
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+const PORT = 3333;
 
-app.use("/selecoes", selecoesRouter);
-app.use("/partidas", partidasRouter);
-
-app.get("/", (req, res) => {
-  res.json({ status: "ok", mensagem: "Central de Resultados API" });
+app.listen(PORT, () => {
+  console.log(`Servidor em http://localhost:${PORT}`);
 });
-
-app.listen(3333, () => console.log("Servidor em http://localhost:3333"));

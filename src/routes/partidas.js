@@ -1,30 +1,94 @@
 import { Router } from "express";
-import { PrismaClient } from "@prisma/client";
+import { validate } from "../midwallers/validate.js";
+import { criarPartidaSchema } from "../schemas/partida.schema.js";
+import { resultadoSchema } from "../schemas/resultado.schema.js";
+
+import {
+  listarPartidas,
+  criarPartida,
+  atualizarResultado
+} from "../controllers/partidas.controller.js";
+
 
 const router = Router();
-const prisma = new PrismaClient();
 
-// GET /partidas
-// Retorna todas as partidas incluindo dados das seleções
-router.get("/", async (req, res) => {
-  // TODO: buscar todas as partidas com include de mandante e visitante
-  // Ordenar por rodada crescente
-});
+/**
+ * @swagger
+ * /partidas:
+ *   get:
+ *     summary: Lista todas as partidas
+ *     tags:
+ *       - Partidas
+ *     responses:
+ *       200:
+ *         description: Lista de partidas
+ */
+router.get("/", listarPartidas);
 
-// GET /partidas/rodada/:numero
-// Retorna as partidas de uma rodada específica
-router.get("/rodada/:numero", async (req, res) => {
-  // TODO: buscar partidas filtrando por rodada (req.params.numero)
-  // Dica: converta o parâmetro para número inteiro com parseInt()
-  // Se não for um número válido, retorne status 400
-});
+/**
+ * @swagger
+ * /partidas:
+ *   post:
+ *     summary: Cria uma nova partida
+ *     tags:
+ *       - Partidas
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               mandanteId:
+ *                 type: integer
+ *               visitanteId:
+ *                 type: integer
+ *               rodada:
+ *                 type: integer
+ *               fase:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Partida criada
+ */
+router.post(
+  "/",
+  validate(criarPartidaSchema),
+  criarPartida
+);
 
-// PATCH /partidas/:id/resultado
-// Atualiza o placar de uma partida
-router.patch("/:id/resultado", async (req, res) => {
-  // TODO: receber golsMandante e golsVisitante do req.body
-  // Atualizar a partida no banco e marcar realizada: true
-  // Se a partida não existir, o Prisma lança erro com code "P2025" — trate isso
-});
+/**
+ * @swagger
+ * /partidas/{id}:
+ *   put:
+ *     summary: Atualiza o resultado de uma partida
+ *     tags:
+ *       - Partidas
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               golsMandante:
+ *                 type: integer
+ *               golsVisitante:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Resultado atualizado
+ */
+router.put(
+  "/:id",
+  validate(resultadoSchema),
+  atualizarResultado
+);  
 
 export default router;

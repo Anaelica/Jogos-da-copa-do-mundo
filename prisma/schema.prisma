@@ -1,44 +1,34 @@
-// 1. Gerador — instrui o Prisma a criar o Client JavaScript
 generator client {
   provider = "prisma-client-js"
 }
 
-// 2. Banco de dados
-// DATABASE_URL: porta 6543, pgbouncer=true (pool de conexões do Supabase)
-// DIRECT_URL: porta 5432 (conexão direta, necessária para migrations)
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-// 3. Models — cada model vira uma tabela no banco
 model Selecao {
-  id       Int    @id @default(autoincrement())
-  nome     String
-  sigla    String @unique
-  grupo    String
-  bandeira String
-
+  id                Int       @id @default(autoincrement())
+  nome              String
+  sigla             String    @unique
+  grupo             String
+  bandeira          String
+  createdAt         DateTime  @default(now())
   partidasMandante  Partida[] @relation("Mandante")
   partidasVisitante Partida[] @relation("Visitante")
-
-  createdAt DateTime @default(now())
 }
 
 model Partida {
-  id            Int     @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   mandanteId    Int
   visitanteId   Int
-  golsMandante  Int     @default(0)
-  golsVisitante Int     @default(0)
-  fase          String  @default("Fase de Grupos")
+  golsMandante  Int      @default(0)
+  golsVisitante Int      @default(0)
+  fase          String   @default("Fase de Grupos")
   rodada        Int
-  realizada     Boolean @default(false)
-
-  // @relation deve ficar em linha única — quebrar em múltiplas linhas causa erro P1012
-  mandante  Selecao @relation("Mandante", fields: [mandanteId], references: [id])
-  visitante Selecao @relation("Visitante", fields: [visitanteId], references: [id])
-
-  createdAt DateTime @default(now())
+  realizada     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  mandante      Selecao  @relation("Mandante", fields: [mandanteId], references: [id])
+  visitante     Selecao  @relation("Visitante", fields: [visitanteId], references: [id])
 }
